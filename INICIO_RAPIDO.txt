@@ -1,0 +1,98 @@
+=====================================================================
+  GUÍA DE INICIO RÁPIDO — TALLER MECÁNICO PRO
+=====================================================================
+
+OPCIÓN A: DESARROLLO LOCAL (sin Docker)
+-----------------------------------------
+
+REQUISITOS:
+  - Node.js 18+
+  - PostgreSQL 14+ instalado y corriendo
+
+PASOS:
+
+1. Crear la base de datos en PostgreSQL:
+   CREATE DATABASE taller_mecanico;
+
+2. Configurar el backend:
+   cd backend
+   npm install
+   cp .env.example .env
+   (Editar .env con tu cadena de conexión y JWT_SECRET)
+   npx prisma migrate dev --name init
+   node prisma/seed.js
+
+3. Iniciar el backend:
+   npm run dev
+   → Corre en http://localhost:4000
+
+4. Configurar el frontend (otra terminal):
+   cd frontend
+   npm install
+   npm run dev
+   → Corre en http://localhost:3000
+
+USUARIOS DE PRUEBA (tras ejecutar seed):
+  Admin:    admin@taller.com    / admin123
+  Mecánico: mecanico@taller.com / mec123
+
+=====================================================================
+
+OPCIÓN B: CON DOCKER COMPOSE (recomendado para producción)
+----------------------------------------------------------
+
+REQUISITOS:
+  - Docker Desktop instalado
+
+PASOS:
+
+1. Desde la raíz del proyecto:
+   docker-compose up --build
+
+2. La primera vez, ejecutar el seed (en otra terminal):
+   docker exec taller_backend node prisma/seed.js
+
+3. Acceder en el navegador:
+   Frontend: http://localhost:3000
+   API:      http://localhost:4000/api/health
+
+=====================================================================
+
+ESTRUCTURA DEL PROYECTO
+-----------------------------------------
+taller mecanico/
+├── backend/
+│   ├── prisma/
+│   │   ├── schema.prisma    ← Esquema de base de datos
+│   │   └── seed.js          ← Datos iniciales
+│   ├── src/
+│   │   ├── controllers/     ← Lógica de negocio
+│   │   ├── routes/          ← Endpoints de la API
+│   │   ├── middlewares/     ← Auth y roles
+│   │   └── index.js         ← Punto de entrada
+│   └── Dockerfile
+├── frontend/
+│   ├── src/
+│   │   ├── pages/           ← Pantallas de la app
+│   │   ├── components/      ← Componentes reutilizables
+│   │   ├── services/        ← Llamadas a la API
+│   │   ├── store/           ← Estado global (Zustand)
+│   │   └── types/           ← Tipos TypeScript
+│   └── Dockerfile
+└── docker-compose.yml
+
+API ENDPOINTS PRINCIPALES:
+  POST   /api/auth/login
+  GET    /api/clientes
+  GET    /api/vehiculos
+  GET    /api/ordenes
+  GET    /api/ordenes/:id
+  PATCH  /api/ordenes/:id/estado
+  POST   /api/ordenes/:id/servicios
+  POST   /api/ordenes/:id/repuestos
+  GET    /api/repuestos
+  GET    /api/facturas
+  POST   /api/facturas/orden/:ordenId
+  GET    /api/reportes/dashboard
+
+=====================================================================

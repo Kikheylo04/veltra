@@ -1,0 +1,173 @@
+# PLAN DE PROYECTO: SISTEMA DE GESTIÓN PARA TALLER MECÁNICO
+=====================================================================
+
+## DESCRIPCIÓN GENERAL
+Aplicación web para gestionar las operaciones de un taller mecánico:
+clientes, vehículos, órdenes de trabajo, inventario, y facturación.
+
+=====================================================================
+## MÓDULOS DEL SISTEMA
+=====================================================================
+
+### 1. GESTIÓN DE CLIENTES
+- Registro de clientes (nombre, teléfono, correo, dirección)
+- Historial de visitas y servicios por cliente
+- Búsqueda y filtrado de clientes
+
+### 2. GESTIÓN DE VEHÍCULOS
+- Registro de vehículos (placa, marca, modelo, año, color, VIN)
+- Asociación de vehículo a cliente
+- Historial de servicios por vehículo
+
+### 3. ÓRDENES DE TRABAJO (OT)
+- Creación de OT al recibir un vehículo
+- Descripción del problema reportado por el cliente
+- Asignación de mecánico responsable
+- Lista de trabajos realizados y repuestos utilizados
+- Estados: Recibido → En diagnóstico → En reparación → Listo → Entregado
+- Fecha de ingreso y fecha estimada de entrega
+
+### 4. INVENTARIO DE REPUESTOS
+- Catálogo de piezas y repuestos (código, nombre, descripción, precio costo, precio venta)
+- Control de stock (cantidad disponible, stock mínimo con alerta)
+- Registro de entradas y salidas de inventario
+- Proveedores de repuestos
+
+### 5. FACTURACIÓN
+- Generación de facturas a partir de la OT
+- Desglose de mano de obra y repuestos
+- Cálculo automático de totales e impuestos
+- Historial de pagos (efectivo, transferencia, tarjeta)
+- Impresión / exportación a PDF
+
+### 6. GESTIÓN DE MECÁNICOS / EMPLEADOS
+- Registro de empleados (nombre, especialidad, contacto)
+- Asignación de OT por mecánico
+- Reporte de carga de trabajo
+
+### 7. REPORTES Y DASHBOARD
+- Ingresos del día / semana / mes
+- OT abiertas vs. cerradas
+- Repuestos más utilizados
+- Clientes más frecuentes
+- Gráficas y métricas clave
+
+### 8. AUTENTICACIÓN Y ROLES
+- Login con usuario y contraseña
+- Roles: Administrador, Recepcionista, Mecánico
+- Control de acceso por módulo según rol
+
+=====================================================================
+## STACK TECNOLÓGICO PROPUESTO
+=====================================================================
+
+### Frontend
+- React + TypeScript
+- Tailwind CSS (UI)
+- React Router (navegación)
+- React Query / Zustand (estado)
+
+### Backend
+- Node.js + Express (API REST)
+  -- ó --
+- Django (Python) si se prefiere un framework más completo
+
+### Base de Datos
+- PostgreSQL (relacional, ideal para este tipo de negocio)
+- ORM: Prisma (Node) o Django ORM
+
+### Autenticación
+- JWT (JSON Web Tokens)
+
+### Extras
+- jsPDF / React-PDF (generación de facturas en PDF)
+- Docker (contenedorización para despliegue)
+
+=====================================================================
+## FASES DE DESARROLLO
+=====================================================================
+
+### FASE 1 — Configuración inicial (Semana 1)
+- [ ] Definir y confirmar stack tecnológico
+- [ ] Crear repositorio Git
+- [ ] Configurar proyecto frontend (React + Tailwind)
+- [ ] Configurar proyecto backend (API REST)
+- [ ] Configurar base de datos y ORM
+- [ ] Diseño del esquema de base de datos (ERD)
+
+### FASE 2 — Autenticación y estructura base (Semana 2)
+- [ ] Sistema de login con JWT
+- [ ] Gestión de roles (Admin, Recepcionista, Mecánico)
+- [ ] Layout principal con menú de navegación
+- [ ] Protección de rutas por rol
+
+### FASE 3 — Clientes y Vehículos (Semana 3)
+- [ ] CRUD de clientes
+- [ ] CRUD de vehículos
+- [ ] Asociación cliente-vehículo
+- [ ] Búsqueda y filtros
+
+### FASE 4 — Órdenes de Trabajo (Semanas 4-5)
+- [ ] CRUD de órdenes de trabajo
+- [ ] Flujo de estados de la OT
+- [ ] Asignación de mecánico
+- [ ] Registro de trabajos y repuestos en la OT
+
+### FASE 5 — Inventario (Semana 6)
+- [ ] CRUD de repuestos/productos
+- [ ] Control de stock
+- [ ] Alertas de stock mínimo
+- [ ] Gestión de proveedores
+
+### FASE 6 — Facturación (Semana 7)
+- [ ] Generación de factura desde OT
+- [ ] Cálculo de totales e impuestos
+- [ ] Registro de pagos
+- [ ] Exportación a PDF
+
+### FASE 7 — Reportes y Dashboard (Semana 8)
+- [ ] Dashboard con métricas clave
+- [ ] Reportes de ingresos
+- [ ] Reportes de OT
+- [ ] Reportes de inventario
+
+### FASE 8 — Pruebas y despliegue (Semanas 9-10)
+- [ ] Pruebas funcionales
+- [ ] Corrección de bugs
+- [ ] Optimización de rendimiento
+- [ ] Configuración de Docker
+- [ ] Despliegue en servidor (VPS o nube)
+
+=====================================================================
+## ESQUEMA DE BASE DE DATOS (ENTIDADES PRINCIPALES)
+=====================================================================
+
+clientes         → id, nombre, telefono, correo, direccion, created_at
+vehiculos        → id, cliente_id, placa, marca, modelo, anio, color, vin
+empleados        → id, nombre, especialidad, telefono, rol
+ordenes_trabajo  → id, vehiculo_id, empleado_id, descripcion_problema,
+                   estado, fecha_ingreso, fecha_entrega_est, fecha_entrega_real
+ot_servicios     → id, orden_id, descripcion, costo_mano_obra
+repuestos        → id, codigo, nombre, descripcion, precio_costo, precio_venta, stock
+ot_repuestos     → id, orden_id, repuesto_id, cantidad, precio_unitario
+facturas         → id, orden_id, subtotal, impuesto, total, metodo_pago, fecha
+proveedores      → id, nombre, telefono, correo
+
+=====================================================================
+## ENTREGABLES
+=====================================================================
+1. Código fuente completo (repositorio Git)
+2. Base de datos con datos de prueba
+3. Manual de usuario básico
+4. Instrucciones de instalación y despliegue
+5. API documentada (Swagger / Postman)
+
+=====================================================================
+## PRÓXIMOS PASOS INMEDIATOS
+=====================================================================
+1. Confirmar stack tecnológico con el cliente/equipo
+2. Crear el repositorio y estructura de carpetas del proyecto
+3. Diseñar el ERD completo en una herramienta como dbdiagram.io
+4. Comenzar con la Fase 1
+
+=====================================================================

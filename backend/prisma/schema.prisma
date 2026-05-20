@@ -1,0 +1,458 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id         Int      @id @default(autoincrement())
+  nombre     String
+  email      String   @unique
+  password   String
+  rol        Rol      @default(RECEPCIONISTA)
+  activo     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  empleado   Empleado?
+
+  @@map("usuarios")
+}
+
+enum Rol {
+  ADMIN
+  RECEPCIONISTA
+  MECANICO
+}
+
+model Cliente {
+  id         Int        @id @default(autoincrement())
+  nombre     String
+  telefono   String?
+  correo     String?
+  direccion  String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  vehiculos    Vehiculo[]
+  citas        Cita[]
+  cotizaciones Cotizacion[]
+
+  @@map("clientes")
+}
+
+model Vehiculo {
+  id         Int             @id @default(autoincrement())
+  clienteId  Int
+  placa      String          @unique
+  marca      String
+  modelo     String
+  anio       Int
+  color      String?
+  vin        String?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  cliente        Cliente          @relation(fields: [clienteId], references: [id])
+  ordenes        OrdenTrabajo[]
+  citas          Cita[]
+  cotizaciones   Cotizacion[]
+  mantenimientos Mantenimiento[]
+
+  @@map("vehiculos")
+}
+
+model Empleado {
+  id           Int            @id @default(autoincrement())
+  usuarioId    Int?           @unique
+  nombre       String
+  especialidad String?
+  telefono     String?
+  activo       Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+
+  usuario      Usuario?       @relation(fields: [usuarioId], references: [id])
+  ordenes      OrdenTrabajo[]
+  leads        Lead[]
+  metas        Meta[]
+
+  @@map("empleados")
+}
+
+model OrdenTrabajo {
+  id                  Int            @id @default(autoincrement())
+  vehiculoId          Int
+  empleadoId          Int?
+  descripcionProblema String
+  estado              EstadoOT       @default(RECIBIDO)
+  fechaIngreso        DateTime       @default(now())
+  fechaEntregaEst     DateTime?
+  fechaEntregaReal    DateTime?
+  observaciones       String?
+  historialEstados    Json?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  vehiculo    Vehiculo       @relation(fields: [vehiculoId], references: [id])
+  empleado    Empleado?      @relation(fields: [empleadoId], references: [id])
+  servicios   OTServicio[]
+  repuestos   OTRepuesto[]
+  factura     Factura?
+  garantia    Garantia?
+
+  @@map("ordenes_trabajo")
+}
+
+enum EstadoOT {
+  RECIBIDO
+  DIAGNOSTICO
+  REPARACION
+  LISTO
+  ENTREGADO
+  CANCELADO
+}
+
+model OTServicio {
+  id            Int          @id @default(autoincrement())
+  ordenId       Int
+  descripcion   String
+  costoManoObra Decimal      @default(0)
+
+  orden         OrdenTrabajo @relation(fields: [ordenId], references: [id])
+
+  @@map("ot_servicios")
+}
+
+model Repuesto {
+  id           Int          @id @default(autoincrement())
+  codigo       String       @unique
+  nombre       String
+  descripcion  String?
+  precioCosto  Decimal      @default(0)
+  precioVenta  Decimal      @default(0)
+  stock        Int          @default(0)
+  stockMinimo  Int          @default(5)
+  proveedorId  Int?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  proveedor    Proveedor?   @relation(fields: [proveedorId], references: [id])
+  otRepuestos  OTRepuesto[]
+
+  @@map("repuestos")
+}
+
+model OTRepuesto {
+  id             Int          @id @default(autoincrement())
+  ordenId        Int
+  repuestoId     Int
+  cantidad       Int
+  precioUnitario Decimal
+
+  orden          OrdenTrabajo @relation(fields: [ordenId], references: [id])
+  repuesto       Repuesto     @relation(fields: [repuestoId], references: [id])
+
+  @@map("ot_repuestos")
+}
+
+model Proveedor {
+  id        Int        @id @default(autoincrement())
+  nombre    String
+  telefono  String?
+  correo    String?
+  direccion String?
+  createdAt DateTime   @default(now())
+
+  repuestos Repuesto[]
+
+  @@map("proveedores")
+}
+
+model Factura {
+  id          Int          @id @default(autoincrement())
+  ordenId     Int          @unique
+  subtotal    Decimal
+  impuesto    Decimal      @default(0)
+  total       Decimal
+  metodoPago  MetodoPago   @default(EFECTIVO)
+  pagado      Boolean      @default(false)
+  fecha       DateTime     @default(now())
+
+  orden       OrdenTrabajo @relation(fields: [ordenId], references: [id])
+
+  @@map("facturas")
+}
+
+enum MetodoPago {
+  EFECTIVO
+  TRANSFERENCIA
+  TARJETA
+}
+
+model Sucursal {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  direccion String?
+  telefono  String?
+  activa    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  citas        Cita[]
+  cajas        CajaDiaria[]
+  leads        Lead[]
+  diagnosticos DiagnosticoComercial[]
+  metas        Meta[]
+
+  @@map("sucursales")
+}
+
+model Cita {
+  id          Int        @id @default(autoincrement())
+  clienteId   Int
+  vehiculoId  Int?
+  sucursalId  Int?
+  fecha       DateTime
+  descripcion String
+  estado      EstadoCita @default(PENDIENTE)
+  createdAt   DateTime   @default(now())
+
+  cliente    Cliente   @relation(fields: [clienteId], references: [id])
+  vehiculo   Vehiculo? @relation(fields: [vehiculoId], references: [id])
+  sucursal   Sucursal? @relation(fields: [sucursalId], references: [id])
+
+  @@map("citas")
+}
+
+enum EstadoCita {
+  PENDIENTE
+  CONFIRMADA
+  COMPLETADA
+  CANCELADA
+}
+
+model Cotizacion {
+  id          Int              @id @default(autoincrement())
+  clienteId   Int
+  vehiculoId  Int?
+  descripcion String
+  estado      EstadoCotizacion @default(BORRADOR)
+  validaHasta DateTime?
+  notas       String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  cliente  Cliente            @relation(fields: [clienteId], references: [id])
+  vehiculo Vehiculo?          @relation(fields: [vehiculoId], references: [id])
+  items    CotizacionItem[]
+
+  @@map("cotizaciones")
+}
+
+enum EstadoCotizacion {
+  BORRADOR
+  ENVIADA
+  APROBADA
+  RECHAZADA
+}
+
+model CotizacionItem {
+  id             Int        @id @default(autoincrement())
+  cotizacionId   Int
+  descripcion    String
+  cantidad       Int        @default(1)
+  precioUnitario Decimal
+
+  cotizacion Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
+
+  @@map("cotizacion_items")
+}
+
+model Mantenimiento {
+  id              Int      @id @default(autoincrement())
+  vehiculoId      Int
+  tipo            String
+  descripcion     String?
+  kmActual        Int?
+  kmProximo       Int?
+  fechaRealizado  DateTime @default(now())
+  fechaProximo    DateTime?
+  costo           Decimal  @default(0)
+  createdAt       DateTime @default(now())
+
+  vehiculo Vehiculo @relation(fields: [vehiculoId], references: [id])
+
+  @@map("mantenimientos")
+}
+
+model Garantia {
+  id          Int      @id @default(autoincrement())
+  ordenId     Int      @unique
+  descripcion String
+  diasGarantia Int     @default(30)
+  kmGarantia  Int?
+  fechaInicio DateTime @default(now())
+  fechaFin    DateTime
+  activa      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  orden OrdenTrabajo @relation(fields: [ordenId], references: [id])
+
+  @@map("garantias")
+}
+
+model CajaDiaria {
+  id          Int          @id @default(autoincrement())
+  sucursalId  Int?
+  fecha       DateTime     @default(now())
+  tipo        TipoCaja
+  concepto    String
+  monto       Decimal
+  metodoPago  MetodoPago   @default(EFECTIVO)
+  referencia  String?
+  createdAt   DateTime     @default(now())
+
+  sucursal Sucursal? @relation(fields: [sucursalId], references: [id])
+
+  @@map("caja_diaria")
+}
+
+enum TipoCaja {
+  INGRESO
+  EGRESO
+}
+
+// ─── CRM ──────────────────────────────────────────────────────────────
+
+model Lead {
+  id           Int        @id @default(autoincrement())
+  nombre       String
+  telefono     String?
+  correo       String?
+  origen       String?
+  estado       EstadoLead @default(NUEVO)
+  asesorId     Int?
+  sucursalId   Int?
+  notas        String?
+  valorEstimado Decimal?
+  conversando  Boolean    @default(false)
+  conversandoStoppedAt DateTime?
+  firstResponseAt      DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  asesor     Empleado?  @relation(fields: [asesorId], references: [id])
+  sucursal   Sucursal?  @relation(fields: [sucursalId], references: [id])
+  mensajes   MensajeCRM[]
+  actividades ActividadCRM[]
+
+  @@map("leads")
+}
+
+enum EstadoLead {
+  NUEVO
+  CONTACTADO
+  CALIFICADO
+  COTIZACION
+  NEGOCIACION
+  GANADO
+  PERDIDO
+  SIN_RESPONDER
+}
+
+model MensajeCRM {
+  id        Int      @id @default(autoincrement())
+  leadId    Int
+  tipo      String   @default("text")
+  contenido String
+  entrante  Boolean  @default(true)
+  waMessageId String? @unique
+  createdAt DateTime @default(now())
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@map("mensajes_crm")
+}
+
+model ActividadCRM {
+  id        Int      @id @default(autoincrement())
+  leadId    Int
+  tipo      String
+  descripcion String
+  createdAt DateTime @default(now())
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@map("actividades_crm")
+}
+
+model PlantillaCRM {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  categoria   String
+  contenido   String
+  variables   String?
+  usos        Int      @default(0)
+  favorita    Boolean  @default(false)
+  activa      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("plantillas_crm")
+}
+
+model ServicioRapido {
+  id       Int    @id @default(autoincrement())
+  nombre   String
+  precio   Decimal @default(0)
+  usos     Int    @default(0)
+  activo   Boolean @default(true)
+
+  @@map("servicios_rapidos")
+}
+
+model DiagnosticoComercial {
+  id          Int      @id @default(autoincrement())
+  sucursalId  Int?
+  respuestas  Json
+  puntaje     Int      @default(0)
+  nivel       String   @default("Sin diagnosticar")
+  mejoraPct   Int      @default(15)
+  createdAt   DateTime @default(now())
+
+  sucursal Sucursal? @relation(fields: [sucursalId], references: [id])
+
+  @@map("diagnosticos_comerciales")
+}
+
+model Meta {
+  id         Int      @id @default(autoincrement())
+  sucursalId Int?
+  empleadoId Int?
+  tipo       String
+  mes        Int
+  anio       Int
+  metaValor  Decimal
+  realValor  Decimal  @default(0)
+  createdAt  DateTime @default(now())
+
+  sucursal Sucursal? @relation(fields: [sucursalId], references: [id])
+  empleado Empleado? @relation(fields: [empleadoId], references: [id])
+
+  @@map("metas")
+}
+
+model LogActividad {
+  id         Int      @id @default(autoincrement())
+  usuarioId  Int?
+  accion     String
+  entidad    String
+  entidadId  Int?
+  detalle    String?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@map("log_actividad")
+}

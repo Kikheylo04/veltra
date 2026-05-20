@@ -1,0 +1,12 @@
+{
+  "nombre": "VELTRA",
+  "slogan": "Taller Mecánico",
+  "telefono": "",
+  "correo": "",
+  "direccion": "",
+  "ruc": "",
+  "moneda": "$",
+  "impuestoPct": 0,
+  "diasGarantiaDefault": 30,
+  "colorPrimario": "#2563eb"
+}
