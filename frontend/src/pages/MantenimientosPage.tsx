@@ -133,7 +133,7 @@ export default function MantenimientosPage() {
                     <option key={v.id} value={v.id}>{v.placa} — {v.marca} {v.modelo} ({v.cliente?.nombre})</option>
                   ))}
                 </select>
-                {errors.vehiculoId && <p className="text-red-500 text-xs mt-1">{errors.vehiculoId.message}</p>}
+                {errors.vehiculoId && <p className="text-red-500 text-xs mt-1">{errors.vehiculoId.message as string}</p>}
               </div>
               <div>
                 <label className="label">Tipo *</label>
@@ -141,7 +141,7 @@ export default function MantenimientosPage() {
                   <option value="">Seleccionar...</option>
                   {TIPOS.map(t => <option key={t}>{t}</option>)}
                 </select>
-                {errors.tipo && <p className="text-red-500 text-xs mt-1">{errors.tipo.message}</p>}
+                {errors.tipo && <p className="text-red-500 text-xs mt-1">{errors.tipo.message as string}</p>}
               </div>
               <div><label className="label">Descripción</label><textarea className="input" rows={2} {...register('descripcion')} /></div>
               <div className="grid grid-cols-2 gap-3">

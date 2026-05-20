@@ -19,8 +19,8 @@ export default function VehiculosPage() {
   });
 
   const { data: clientes = [] } = useQuery<Cliente[]>({
-    queryKey: ['clientes'],
-    queryFn: () => clienteApi.getAll().then((r) => r.data),
+    queryKey: ['clientes-all'],
+    queryFn: () => clienteApi.getAll('', 1, 999).then((r) => r.data?.data ?? r.data),
   });
 
   const crear = useMutation({

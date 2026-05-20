@@ -25,6 +25,8 @@ export default function OrdenDetallePage() {
   const config = useConfig();
   const [tabServicio, setTabServicio] = useState(true);
   const [editandoInfo, setEditandoInfo] = useState(false);
+  const [modalFactura, setModalFactura] = useState(false);
+  const [metodoPagoFactura, setMetodoPagoFactura] = useState('EFECTIVO');
   const { register: rSvc, handleSubmit: hSvc, reset: resetSvc } = useForm<any>();
   const { register: rRep, handleSubmit: hRep, reset: resetRep } = useForm<any>();
   const { register: rGar, handleSubmit: hGar, reset: resetGar } = useForm<any>();
@@ -92,8 +94,8 @@ export default function OrdenDetallePage() {
   });
 
   const generarFactura = useMutation({
-    mutationFn: () => facturaApi.generar(Number(id), { metodoPago: 'EFECTIVO', impuestoPct: 0 }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['orden', id] }); toast.success('Factura generada'); },
+    mutationFn: () => facturaApi.generar(Number(id), { metodoPago: metodoPagoFactura, impuestoPct: config.impuestoPct }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['orden', id] }); setModalFactura(false); toast.success('Factura generada'); },
     onError: (e: any) => toast.error(e.response?.data?.error || 'Error'),
   });
 
@@ -119,7 +121,7 @@ export default function OrdenDetallePage() {
       autoTable(doc, {
         head: [['Repuesto', 'Cant.', 'Precio unit.', 'Subtotal']],
         body: orden.repuestos.map((r) => [
-          r.repuesto?.nombre, r.cantidad,
+          r.repuesto?.nombre ?? '', r.cantidad,
           formatMonto(r.precioUnitario, config),
           formatMonto(r.cantidad * Number(r.precioUnitario), config),
         ]),
@@ -153,9 +155,14 @@ export default function OrdenDetallePage() {
             <FileText size={16} /> Exportar PDF
           </button>
           {!orden.factura && orden.estado !== 'CANCELADO' && (
-            <button onClick={() => generarFactura.mutate()} className="btn-primary flex items-center gap-2 text-sm">
+            <button onClick={() => setModalFactura(true)} className="btn-primary flex items-center gap-2 text-sm">
               <FileText size={16} /> Generar factura
             </button>
+          )}
+          {orden.factura && (
+            <span className="text-sm text-green-600 font-medium flex items-center gap-1">
+              <FileText size={15} /> Factura #{(orden as any).factura.id}
+            </span>
           )}
         </div>
       </div>
@@ -359,6 +366,47 @@ export default function OrdenDetallePage() {
           )}
         </div>
       </div>
+
+      {/* Modal generar factura */}
+      {modalFactura && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-lg font-bold mb-4">Generar Factura</h2>
+            <div className="space-y-4 text-sm mb-5">
+              <div className="flex justify-between text-gray-600">
+                <span>Servicios</span><span className="font-medium">{formatMonto(totalServicios, config)}</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Repuestos</span><span className="font-medium">{formatMonto(totalRepuestos, config)}</span>
+              </div>
+              {config.impuestoPct > 0 && (
+                <div className="flex justify-between text-gray-600">
+                  <span>Impuesto ({config.impuestoPct}%)</span>
+                  <span className="font-medium">{formatMonto(total * config.impuestoPct / 100, config)}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-bold text-base border-t pt-3">
+                <span>Total</span>
+                <span className="text-green-600">{formatMonto(total * (1 + config.impuestoPct / 100), config)}</span>
+              </div>
+            </div>
+            <div className="mb-5">
+              <label className="label">Método de pago</label>
+              <select className="input" value={metodoPagoFactura} onChange={e => setMetodoPagoFactura(e.target.value)}>
+                <option value="EFECTIVO">Efectivo</option>
+                <option value="TRANSFERENCIA">Transferencia</option>
+                <option value="TARJETA">Tarjeta</option>
+              </select>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setModalFactura(false)} className="btn-secondary flex-1">Cancelar</button>
+              <button onClick={() => generarFactura.mutate()} disabled={generarFactura.isPending} className="btn-primary flex-1">
+                {generarFactura.isPending ? 'Generando...' : 'Confirmar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

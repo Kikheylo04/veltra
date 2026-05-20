@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { Plus, Eye, X, Trash2 } from 'lucide-react';
+import { Plus, Eye, X, Trash2, ArrowRight } from 'lucide-react';
 import api, { clienteApi, vehiculoApi } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useConfig, formatMonto } from '../hooks/useConfig';
@@ -17,6 +18,7 @@ const ESTADO_BADGE: Record<string, string> = {
 
 export default function CotizacionesPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const config = useConfig();
   const [modal, setModal] = useState(false);
   const [detalle, setDetalle] = useState<any>(null);
@@ -28,8 +30,8 @@ export default function CotizacionesPage() {
     queryFn: () => api.get('/cotizaciones').then(r => r.data),
   });
 
-  const { data: clientes = [] } = useQuery({ queryKey: ['clientes'], queryFn: () => clienteApi.getAll().then(r => r.data) });
-  const { data: vehiculos = [] } = useQuery({ queryKey: ['vehiculos'], queryFn: () => vehiculoApi.getAll().then(r => r.data) });
+  const { data: clientes = [] } = useQuery({ queryKey: ['clientes-all'], queryFn: () => clienteApi.getAll('', 1, 999).then(r => r.data?.data ?? r.data) });
+  const { data: vehiculos = [] } = useQuery({ queryKey: ['vehiculos-all'], queryFn: () => vehiculoApi.getAll().then(r => r.data) });
 
   const crear = useMutation({
     mutationFn: (d: any) => api.post('/cotizaciones', { ...d, items }),
@@ -39,8 +41,19 @@ export default function CotizacionesPage() {
 
   const cambiarEstado = useMutation({
     mutationFn: ({ id, estado }: any) => api.patch(`/cotizaciones/${id}/estado`, { estado }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['cotizaciones'] }); if (detalle) setDetalle((d: any) => ({ ...d, estado: '' })); },
+    onSuccess: (_, vars) => { qc.invalidateQueries({ queryKey: ['cotizaciones'] }); if (detalle) setDetalle((d: any) => ({ ...d, estado: vars.estado })); toast.success('Estado actualizado'); },
     onError: () => toast.error('Error al actualizar'),
+  });
+
+  const convertirAOT = useMutation({
+    mutationFn: (cotId: number) => api.post(`/cotizaciones/${cotId}/convertir-ot`, {}),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ['cotizaciones'] });
+      setDetalle(null);
+      toast.success('Orden de trabajo creada');
+      navigate(`/ordenes/${res.data.id}`);
+    },
+    onError: (e: any) => toast.error(e.response?.data?.error || 'Error al convertir'),
   });
 
   const addItem = () => setItems(prev => [...prev, { descripcion: '', cantidad: 1, precioUnitario: 0 }]);
@@ -120,7 +133,7 @@ export default function CotizacionesPage() {
                   <td className="px-3 py-2 font-bold">{formatMonto(totalCotizacion(detalle), config)}</td></tr>
               </tfoot>
             </table>
-            <div className="flex gap-2">
+            <div className="flex gap-2 mb-3">
               {['ENVIADA','APROBADA','RECHAZADA'].map(e => (
                 <button key={e} onClick={() => cambiarEstado.mutate({ id: detalle.id, estado: e })}
                   className={`btn-secondary text-sm flex-1 ${detalle.estado === e ? 'ring-2 ring-blue-500' : ''}`}>
@@ -128,6 +141,21 @@ export default function CotizacionesPage() {
                 </button>
               ))}
             </div>
+            {detalle.vehiculoId && detalle.estado !== 'RECHAZADA' && (
+              <button
+                onClick={() => convertirAOT.mutate(detalle.id)}
+                disabled={convertirAOT.isPending}
+                className="btn-primary w-full flex items-center justify-center gap-2 text-sm"
+              >
+                <ArrowRight size={16} />
+                {convertirAOT.isPending ? 'Creando orden...' : 'Convertir a Orden de Trabajo'}
+              </button>
+            )}
+            {!detalle.vehiculoId && (
+              <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2 text-center">
+                Asigna un vehículo a esta cotización para poder convertirla en OT.
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -148,7 +176,7 @@ export default function CotizacionesPage() {
                     <option value="">Seleccionar...</option>
                     {(clientes as any[]).map((c: any) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                   </select>
-                  {errors.clienteId && <p className="text-red-500 text-xs mt-1">{errors.clienteId.message}</p>}
+                  {errors.clienteId && <p className="text-red-500 text-xs mt-1">{errors.clienteId.message as string}</p>}
                 </div>
                 <div>
                   <label className="label">Vehículo</label>
@@ -158,7 +186,7 @@ export default function CotizacionesPage() {
                   </select>
                 </div>
               </div>
-              <div><label className="label">Descripción *</label><input className={`input ${errors.descripcion ? 'border-red-400' : ''}`} {...register('descripcion', { required: 'Campo requerido' })} />{errors.descripcion && <p className="text-red-500 text-xs mt-1">{errors.descripcion.message}</p>}</div>
+              <div><label className="label">Descripción *</label><input className={`input ${errors.descripcion ? 'border-red-400' : ''}`} {...register('descripcion', { required: 'Campo requerido' })} />{errors.descripcion && <p className="text-red-500 text-xs mt-1">{errors.descripcion.message as string}</p>}</div>
               <div><label className="label">Válida hasta</label><input type="date" className="input" {...register('validaHasta')} /></div>
               <div>
                 <div className="flex items-center justify-between mb-2">

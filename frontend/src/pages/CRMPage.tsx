@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { Plus, X, Send, MessageSquare, Phone, Zap } from 'lucide-react';
 import api from '../services/api';
+import { useConfig, formatMonto } from '../hooks/useConfig';
 
 const ESTADOS = ['NUEVO','CONTACTADO','CALIFICADO','COTIZACION','NEGOCIACION','GANADO','PERDIDO','SIN_RESPONDER'];
 const ESTADO_COLOR: Record<string,string> = {
@@ -18,6 +19,7 @@ const ESTADO_LABEL: Record<string,string> = {
 };
 
 export default function CRMPage() {
+  const config = useConfig();
   const qc = useQueryClient();
   const [modalNuevo, setModalNuevo] = useState(false);
   const [leadActivo, setLeadActivo] = useState<any>(null);
@@ -73,7 +75,7 @@ export default function CRMPage() {
 
   const usarServicioRapido = async (servicio: any) => {
     await api.post(`/servicios-rapidos/${servicio.id}/uso`);
-    setMensaje(`Servicio: ${servicio.nombre} — $${Number(servicio.precio).toFixed(2)}`);
+    setMensaje(`Servicio: ${servicio.nombre} — ${formatMonto(servicio.precio, config)}`);
   };
 
   const abrirWhatsApp = (telefono: string) => {
@@ -243,7 +245,7 @@ export default function CRMPage() {
               <button onClick={() => { setModalNuevo(false); reset(); }}><X size={20} /></button>
             </div>
             <form onSubmit={handleSubmit(d => crearLead.mutate(d))} className="space-y-4">
-              <div><label className="label">Nombre *</label><input className={`input ${errors.nombre ? 'border-red-400' : ''}`} {...register('nombre', { required: 'Campo requerido' })} />{errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre.message}</p>}</div>
+              <div><label className="label">Nombre *</label><input className={`input ${errors.nombre ? 'border-red-400' : ''}`} {...register('nombre', { required: 'Campo requerido' })} />{errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre.message as string}</p>}</div>
               <div><label className="label">Teléfono</label><input className="input" {...register('telefono')} /></div>
               <div><label className="label">Correo</label><input type="email" className="input" {...register('correo')} /></div>
               <div><label className="label">Origen</label>

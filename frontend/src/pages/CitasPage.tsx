@@ -147,7 +147,7 @@ export default function CitasPage() {
                   <option value="">Seleccionar...</option>
                   {clientes.map((c: any) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                 </select>
-                {errors.clienteId && <p className="text-red-500 text-xs mt-1">{errors.clienteId.message}</p>}
+                {errors.clienteId && <p className="text-red-500 text-xs mt-1">{errors.clienteId.message as string}</p>}
               </div>
               <div>
                 <label className="label">Vehículo {clienteIdWatch ? `(${vehiculosDelCliente.length} del cliente)` : ''}</label>
@@ -159,12 +159,12 @@ export default function CitasPage() {
               <div>
                 <label className="label">Fecha y hora *</label>
                 <input type="datetime-local" className={`input ${errors.fecha ? 'border-red-400' : ''}`} {...register('fecha', { required: 'Campo requerido' })} />
-                {errors.fecha && <p className="text-red-500 text-xs mt-1">{errors.fecha.message}</p>}
+                {errors.fecha && <p className="text-red-500 text-xs mt-1">{errors.fecha.message as string}</p>}
               </div>
               <div>
                 <label className="label">Descripción *</label>
                 <textarea className={`input ${errors.descripcion ? 'border-red-400' : ''}`} rows={3} {...register('descripcion', { required: 'Campo requerido' })} placeholder="Motivo de la cita..." />
-                {errors.descripcion && <p className="text-red-500 text-xs mt-1">{errors.descripcion.message}</p>}
+                {errors.descripcion && <p className="text-red-500 text-xs mt-1">{errors.descripcion.message as string}</p>}
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => { setModal(false); reset(); }} className="btn btn-secondary flex-1">Cancelar</button>

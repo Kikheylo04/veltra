@@ -152,10 +152,10 @@ export default function CajaPage() {
                   <option value="INGRESO">Ingreso</option>
                   <option value="EGRESO">Egreso</option>
                 </select>
-                {errors.tipo && <p className="text-red-500 text-xs mt-1">{errors.tipo.message}</p>}
+                {errors.tipo && <p className="text-red-500 text-xs mt-1">{errors.tipo.message as string}</p>}
               </div>
-              <div><label className="label">Concepto *</label><input className={`input ${errors.concepto ? 'border-red-400' : ''}`} {...register('concepto', { required: 'Campo requerido' })} />{errors.concepto && <p className="text-red-500 text-xs mt-1">{errors.concepto.message}</p>}</div>
-              <div><label className="label">Monto *</label><input type="number" step="0.01" className={`input ${errors.monto ? 'border-red-400' : ''}`} {...register('monto', { required: 'Campo requerido' })} />{errors.monto && <p className="text-red-500 text-xs mt-1">{errors.monto.message}</p>}</div>
+              <div><label className="label">Concepto *</label><input className={`input ${errors.concepto ? 'border-red-400' : ''}`} {...register('concepto', { required: 'Campo requerido' })} />{errors.concepto && <p className="text-red-500 text-xs mt-1">{errors.concepto.message as string}</p>}</div>
+              <div><label className="label">Monto *</label><input type="number" step="0.01" className={`input ${errors.monto ? 'border-red-400' : ''}`} {...register('monto', { required: 'Campo requerido' })} />{errors.monto && <p className="text-red-500 text-xs mt-1">{errors.monto.message as string}</p>}</div>
               <div>
                 <label className="label">Método de pago</label>
                 <select className="input" {...register('metodoPago')}>

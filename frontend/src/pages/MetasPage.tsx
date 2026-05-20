@@ -147,7 +147,7 @@ export default function MetasPage() {
                   <option value="">Seleccionar...</option>
                   {['Ingresos totales','Órdenes completadas','Cotizaciones aprobadas','Clientes nuevos','Repuestos vendidos'].map(t => <option key={t}>{t}</option>)}
                 </select>
-                {errors.tipo && <p className="text-red-500 text-xs mt-1">{errors.tipo.message}</p>}
+                {errors.tipo && <p className="text-red-500 text-xs mt-1">{errors.tipo.message as string}</p>}
               </div>
               <div>
                 <label className="label">Empleado (opcional)</label>
@@ -156,7 +156,7 @@ export default function MetasPage() {
                   {(empleados as any[]).map((e: any) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
                 </select>
               </div>
-              <div><label className="label">Valor de la meta *</label><input type="number" step="0.01" className={`input ${errors.metaValor ? 'border-red-400' : ''}`} {...register('metaValor', { required: 'Campo requerido' })} />{errors.metaValor && <p className="text-red-500 text-xs mt-1">{errors.metaValor.message}</p>}</div>
+              <div><label className="label">Valor de la meta *</label><input type="number" step="0.01" className={`input ${errors.metaValor ? 'border-red-400' : ''}`} {...register('metaValor', { required: 'Campo requerido' })} />{errors.metaValor && <p className="text-red-500 text-xs mt-1">{errors.metaValor.message as string}</p>}</div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => { setModal(false); reset(); }} className="btn-secondary flex-1">Cancelar</button>
                 <button type="submit" className="btn-primary flex-1">Crear meta</button>

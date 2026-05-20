@@ -93,7 +93,7 @@ export default function FacturasPage() {
                         <button onClick={() => navigate(`/ordenes/${f.ordenId}`)} className="p-1 text-gray-400 hover:text-blue-600" title="Ver OT">
                           <Eye size={15} />
                         </button>
-                        <button onClick={() => generarFacturaPDF(f)} className="p-1 text-gray-400 hover:text-green-600" title="Descargar PDF">
+                        <button onClick={() => generarFacturaPDF(f, config)} className="p-1 text-gray-400 hover:text-green-600" title="Descargar PDF">
                           <Download size={15} />
                         </button>
                       </div>

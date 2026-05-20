@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Plus, Eye, X } from 'lucide-react';
+import { Plus, Eye, X, Search } from 'lucide-react';
 import { ordenApi, vehiculoApi, empleadoApi } from '../services/api';
 import { OrdenTrabajo, Vehiculo, Empleado, EstadoOT } from '../types';
 import Pagination from '../components/ui/Pagination';
@@ -29,13 +29,14 @@ export default function OrdenesPage() {
   const navigate = useNavigate();
   const [modal, setModal] = useState(false);
   const [filtroEstado, setFiltroEstado] = useState('');
+  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 20;
   const { register, handleSubmit, reset, formState: { errors } } = useForm<any>();
 
   const { data: ordenesData } = useQuery({
-    queryKey: ['ordenes', filtroEstado, page],
-    queryFn: () => ordenApi.getAll(filtroEstado ? { estado: filtroEstado, page, limit: PAGE_SIZE } : { page, limit: PAGE_SIZE }).then((r) => r.data),
+    queryKey: ['ordenes', filtroEstado, search, page],
+    queryFn: () => ordenApi.getAll({ ...(filtroEstado ? { estado: filtroEstado } : {}), ...(search ? { search } : {}), page, limit: PAGE_SIZE }).then((r) => r.data),
   });
   const ordenes: OrdenTrabajo[] = (ordenesData as any)?.data ?? [];
   const totalOrdenes: number = (ordenesData as any)?.total ?? 0;
@@ -68,6 +69,18 @@ export default function OrdenesPage() {
         <button className="btn-primary flex items-center gap-2" onClick={() => setModal(true)}>
           <Plus size={18} /> Nueva orden
         </button>
+      </div>
+
+      <div className="card mb-4">
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            className="input pl-9"
+            placeholder="Buscar por placa, cliente o problema..."
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
+          />
+        </div>
       </div>
 
       <div className="card mb-6 flex gap-2 flex-wrap">
@@ -138,7 +151,7 @@ export default function OrdenesPage() {
                     <option key={v.id} value={v.id}>{v.placa} — {v.marca} {v.modelo} ({v.cliente?.nombre})</option>
                   ))}
                 </select>
-                {errors.vehiculoId && <p className="text-red-500 text-xs mt-1">{errors.vehiculoId.message}</p>}
+                {errors.vehiculoId && <p className="text-red-500 text-xs mt-1">{errors.vehiculoId.message as string}</p>}
               </div>
               <div>
                 <label className="label">Mecánico asignado</label>
@@ -150,7 +163,7 @@ export default function OrdenesPage() {
               <div>
                 <label className="label">Problema reportado *</label>
                 <textarea className={`input ${errors.descripcionProblema ? 'border-red-400' : ''}`} rows={3} {...register('descripcionProblema', { required: 'Describe el problema' })} />
-                {errors.descripcionProblema && <p className="text-red-500 text-xs mt-1">{errors.descripcionProblema.message}</p>}
+                {errors.descripcionProblema && <p className="text-red-500 text-xs mt-1">{errors.descripcionProblema.message as string}</p>}
               </div>
               <div>
                 <label className="label">Fecha entrega estimada</label>
